@@ -1,0 +1,11 @@
+For calculating strike price:
+=SUM(
+	SUM(
+		$G$1*$G$2*(INDIRECT("RC[-2]",0)/$G$1),
+		$G$2*INDIRECT("RC[-1]",0)
+	),
+	-($G$1*$G$2)
+)
+
+For calculating premium profit:
+=$G$2*INDIRECT("RC[-2]",0)
