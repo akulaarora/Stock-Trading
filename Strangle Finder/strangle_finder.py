@@ -45,8 +45,8 @@ def impl_vol(ticker):
     def get_avg(itm, otm):
         avg_vol = 0
         count = 0
-        for i, option1 in itm.iterrows():
-            for i, option2 in otm.iterrows():
+        for _, option1 in itm.iterrows():
+            for _, option2 in otm.iterrows():
                 if option1['daysToExpiration'] == option2['daysToExpiration'] and option1['strikePrice'] == option2['strikePrice']:
                     avg_vol += mid_val(option1['volatility'], option2['volatility'])
                     count += 1
@@ -107,8 +107,8 @@ def find_strangle(ticker):
     df_puts = df.loc[df['delta'].between(-0.4, -0.1)] # All puts in correct delta range
 
 
-    for i, call in df_calls.iterrows():
-        for j, put in df_puts.iterrows():
+    for _, call in df_calls.iterrows():
+        for _, put in df_puts.iterrows():
             if call['expirationDate'] == put['expirationDate'] and abs(call['delta'] + put['delta']) < 0.05:
                 premium = (call['midPrice'] + put['midPrice'])*100
                 risk = risk_amt(ticker, call['daysToExpiration'], current_price, put['strikePrice'], call['strikePrice'], iv)
@@ -119,7 +119,7 @@ def find_strangle(ticker):
                     print("----------")
                     print("%s @ $%.2f %.0f Delta" % (call['description'], call['midPrice'], call['delta'] * 100))
                     print("%s @ $%.2f %.0f Delta" % (put['description'], put['midPrice'], -put['delta'] * 100))
-                    print("Premium (Reward):%f Risk:%f Reward/Risk:%f Reward/Risk - Delta:%f" % (premium, risk, reward_risk, avg_delta))
+                    print("Premium (Reward):%.2f Risk:%.2f Reward/Risk:%.2f (Reward/Risk-Avg. Delta):%.2f" % (premium, risk, reward_risk, reward_risk - avg_delta))
 
 
 def find_strangles(csv_reader):
