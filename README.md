@@ -1,2 +1,3 @@
-# Discord-Pennystocks
-A mini-project to mine and manipulate some data on the pennystocks discord server.
+# Stock-Trading
+A collection of different projects that I have worked on involving stock trading.
+My personal favorite is the short strangle tool (see folder).
