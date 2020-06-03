@@ -1,3 +1,4 @@
+import sys
 import tdameritrade as td
 import pandas
 import os
@@ -91,12 +92,16 @@ def risk_amt(ticker, days_to_exp, curr_price, put_strike, call_strike, iv = None
     return max(upside_risk, downside_risk)
 
 
-def find_strangle(ticker):
+def find_strangle(ticker, iv = None):
     current_price = mid_val(td_client.quoteDF(ticker).at[0,'askPrice'], td_client.quoteDF(ticker).at[0,'bidPrice'])
-    iv = impl_vol(ticker)
 
     print("------------------------------------------------------------------------------------------")
-    print("IV calculated for %s: %.2f" % (ticker, iv))
+    if iv == None:
+        iv = impl_vol(ticker)
+        print("IV calculated for %s: %.2f" % (ticker, iv))
+    else:
+        print("IV given for %s: %.2f" % (ticker, iv))
+
 
     df = td_client.optionsDF(symbol=ticker, includeQuotes=True, fromDate=twenty_five_days, toDate=fifty_days, strikeCount=100)
     df = df.loc[df['inTheMoney'] == False] # OTM options
@@ -110,10 +115,15 @@ def find_strangle(ticker):
     for _, call in df_calls.iterrows():
         for _, put in df_puts.iterrows():
             if call['expirationDate'] == put['expirationDate'] and abs(call['delta'] + put['delta']) < 0.05:
+                avg_delta = mid_val(call['delta'], -put['delta'])
+
                 premium = (call['midPrice'] + put['midPrice'])*100
                 risk = risk_amt(ticker, call['daysToExpiration'], current_price, put['strikePrice'], call['strikePrice'], iv)
-                reward_risk = premium / risk
-                avg_delta = mid_val(call['delta'], -put['delta'])
+                try:
+                    reward_risk = premium / risk
+                except ZeroDivisionError:
+                    reward_risk = avg_delta + 0.001 # So that it prints the trade. May not be an ideal trade though.
+                    # TODO need to figure out how to handle trades where 95% movement is within strike range. There is still risk.
                 
                 if reward_risk > avg_delta:
                     print("----------")
@@ -213,4 +223,12 @@ def main():
         retry_find_strangles()
 
 if __name__ == '__main__':
-    main()
+    # TODO Document usage
+    if len(sys.argv) == 1:
+        main()
+    elif len(sys.argv) == 2:
+        find_strangle(sys.argv[1])
+    elif len(sys.argv) == 3:
+        find_strangle(sys.argv[1], float(sys.argv[2]))
+    else:
+        print("Incorrect params provided")
